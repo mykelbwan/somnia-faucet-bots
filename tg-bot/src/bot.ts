@@ -46,4 +46,23 @@ bot.onText(FAUCET_REGEX, async (msg, match) => {
   }
 });
 
+
+bot.onText(/!(tokens|supported|faucet|help)/i, (msg) => {
+  const chatId = msg.chat.id;
+  const tokenList = Object.keys(TOKEN_CONFIG); 
+  const response = `
+<b>Somnia Faucet Suite</b>
+
+Use <code>![TOKEN] [ADDRESS]</code> to claim.
+
+<b>Supported Tokens:</b>
+${tokenList.map(t => `• <code>!${t}</code>`).join('\n')}
+
+<b>Example:</b>
+<code>!STT 0x123...</code>
+  `;
+
+  bot.sendMessage(chatId, response, { parse_mode: "HTML" });
+});
+
 bot.on("polling_error", (err) => console.error("Polling error:", err));

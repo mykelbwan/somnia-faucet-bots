@@ -1,4 +1,3 @@
-// src/config/tokens.ts
 import "dotenv/config";
 
 export interface TokenSettings {
