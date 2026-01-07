@@ -1,0 +1,27 @@
+// src/config/tokens.ts
+import "dotenv/config";
+
+export interface TokenSettings {
+  endpoint: string;
+  address: string | null;
+}
+
+const MAIN_ENTRY = process.env.MAIN_ENTRY;
+const claimNative = `${MAIN_ENTRY}/api/faucet/claim-stt`;
+const claimERC = `${MAIN_ENTRY}/api/faucet/claim-erc20`;
+
+export const TOKEN_CONFIG: Record<string, TokenSettings> = {
+  STT: {
+    endpoint: claimNative,
+    address: null,
+  },
+  
+  FS: {
+    endpoint: claimERC,
+    address: "0x174bfb87F8B69619352879fd66116b705121efe6",
+  },
+};
+
+// This takes ["STT", "USDC", "FS"] and turns it into "STT|USDC|FS"
+const tokenPattern = Object.keys(TOKEN_CONFIG).join('|');
+export const FAUCET_REGEX = new RegExp(`!(${tokenPattern})\\s+(0x[a-fA-F0-9]{40})`, 'i');

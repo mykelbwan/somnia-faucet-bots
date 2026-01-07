@@ -1,4 +1,6 @@
 export const abi = [
+  { type: "constructor", inputs: [], stateMutability: "nonpayable" },
+  { type: "receive", stateMutability: "payable" },
   {
     type: "function",
     name: "changeOwner",
@@ -27,4 +29,15 @@ export const abi = [
     outputs: [],
     stateMutability: "nonpayable",
   },
+  {
+    type: "function",
+    name: "owner",
+    inputs: [],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  { type: "error", name: "ClaimFail", inputs: [] },
+  { type: "error", name: "InvalidToken", inputs: [] },
+  { type: "error", name: "NotEnoughBalance", inputs: [] },
+  { type: "error", name: "Unauthorized", inputs: [] },
 ];

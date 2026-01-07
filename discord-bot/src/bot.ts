@@ -89,13 +89,13 @@ bot.on("interactionCreate", async (interaction: Interaction<CacheType>) => {
 
     if (command === "STT") {
       const res = await axios.get(claimNative, {
-        params: { wallet, username },
+        params: { wallet, username, tokenSymbol: "STT" },
       });
       tHash = res.data.txHash;
       amount = res.data.amount;
     } else if (command === "USDC") {
       const res = await axios.get(claimERC, {
-        params: { wallet, token: USDC, username },
+        params: { wallet, token: USDC, username,tokenSymbol:"USDC" },
       });
       tHash = res.data.txHash;
       amount = res.data.amount;
@@ -126,9 +126,7 @@ Received **${amount} ${command}**.
         // If we successfully deferred, we can attempt to edit the reply.
         const errorMessage = err?.response?.data?.error
           ? `${err.response.data.error}`
-          : `An unknown error occurred. (Code: ${
-              err.code || "N/A"
-            })`;
+          : `An unknown error occurred. (Code: ${err.code || "N/A"})`;
 
         await interaction.editReply({ content: errorMessage });
       }
