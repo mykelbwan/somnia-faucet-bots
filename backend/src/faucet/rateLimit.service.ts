@@ -36,37 +36,56 @@ export async function isCoolDownActive(
   wallet: string,
   username: string,
   token: string
-): Promise<{ allowed: boolean; error?: string }> {
+): Promise<{ allowed: boolean; error?: string; timeLeft?: number }> {
   await readDB();
+
   const now = Date.now();
-  const walletKey = `${wallet}:${token.toUpperCase()}`;
-  const usernameKey = `${username}:${token.toUpperCase()}`;
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+  const tokenUpper = token.toUpperCase();
 
-  // Check Wallet
+  const walletKey = `${wallet.toLowerCase()}:${tokenUpper}`;
+  const usernameKey = `${username}:${tokenUpper}`;
+
   const walletRecord = db.data.wallet_claims[walletKey];
-  if (walletRecord && (now - walletRecord.last_claim < TWENTY_FOUR_HOURS_MS)) {
-    const hoursLeft = Math.ceil((TWENTY_FOUR_HOURS_MS - (now - walletRecord.last_claim)) / (1000 * 60 * 60));
-    return { allowed: false, error: `Wallet coolDown: ${hoursLeft}h left.` };
+  if (walletRecord) {
+    const elapsed = now - walletRecord.last_claim;
+    if (elapsed < TWENTY_FOUR_HOURS_MS) {
+      const timeLeft = TWENTY_FOUR_HOURS_MS - elapsed;
+      return {
+        allowed: false,
+        timeLeft: timeLeft,
+        error: `Wallet cooldown active.`,
+      };
+    }
   }
 
-  // Check Username
   const userRecord = db.data.username_claims[usernameKey];
-  if (userRecord && (now - userRecord.last_claim < TWENTY_FOUR_HOURS_MS)) {
-    const hoursLeft = Math.ceil((TWENTY_FOUR_HOURS_MS - (now - userRecord.last_claim)) / (1000 * 60 * 60));
-    return { allowed: false, error: `User coolDown: ${hoursLeft}h left.` };
+  if (userRecord) {
+    const elapsed = now - userRecord.last_claim;
+    if (elapsed < TWENTY_FOUR_HOURS_MS) {
+      const timeLeft = TWENTY_FOUR_HOURS_MS - elapsed;
+      return {
+        allowed: false,
+        timeLeft: timeLeft,
+        error: `Username cooldown active.`,
+      };
+    }
   }
 
-  return { allowed: true };
+  return { allowed: true, timeLeft: 0 };
 }
 
-export async function registerClaim(wallet: string, username: string, token: string) {
-
+export async function registerClaim(
+  wallet: string,
+  username: string,
+  token: string
+) {
   const walletKey = `${wallet}:${token.toUpperCase()}`;
   const usernameKey = `${username}:${token.toUpperCase()}`;
-  
+
   db.data.wallet_claims[walletKey] = { last_claim: Date.now() };
   db.data.username_claims[usernameKey] = { last_claim: Date.now() };
-  
+
   await db.write();
 }
 

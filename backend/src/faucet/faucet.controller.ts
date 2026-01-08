@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { claimNative, claimERC20Token } from "./faucet.service";
 import { isAddress, parseEther } from "ethers";
 import { isCoolDownActive, registerClaim } from "./rateLimit.service";
+import { formatCooldown } from "./utils/time";
 
 const amount = "0.001";
 
@@ -49,7 +50,7 @@ export async function claimERC20(req: Request, res: Response) {
 
     // READ-ONLY CHECK
     const check = await isCoolDownActive(wallet, username, tokenSymbol);
-    
+
     if (!check.allowed) {
       return res.status(429).json({ error: check.error });
     }
@@ -62,6 +63,39 @@ export async function claimERC20(req: Request, res: Response) {
 
     res.json({ txHash, amount });
   } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+export async function getClaimStatus(req: Request, res: Response) {
+  try {
+    const wallet = ((req.query.wallet as string) || "").toLowerCase();
+    if (!wallet) return res.status(400).json({ error: "wallet expected" });
+    const username = (req.query.username as string) || "";
+    const tokensRaw = req.query.tokens as string;
+
+    if (!tokensRaw) {
+      return res.status(400).json({ error: "No tokens provided" });
+    }
+
+    const tokenList = tokensRaw.split(",").map((s) => s.trim());
+    const statusReport: Record<string, string> = {};
+
+    for (const symbol of tokenList) {
+      const check = await isCoolDownActive(wallet, username, symbol);
+
+      if (check.allowed) {
+        statusReport[symbol] = "Ready";
+      } else {
+        statusReport[symbol] = formatCooldown(check.timeLeft || 0);
+      }
+    }
+
+    console.log(`[STATUS CHECK] User: ${username} | Results:`, statusReport);
+
+    res.json(statusReport);
+  } catch (err: any) {
+    console.error("Status Check Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 }
